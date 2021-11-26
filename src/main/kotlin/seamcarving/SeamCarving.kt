@@ -1,6 +1,7 @@
 package seamcarving
 
 import seamcarving.PixelEnergy.Companion.calcPixelEnergy
+import java.awt.Color
 import java.awt.image.BufferedImage
 
 class SeamCarving(val image: BufferedImage) {
@@ -34,6 +35,19 @@ class SeamCarving(val image: BufferedImage) {
                     if (tmpDst < distance[neighbour]!!) distance[neighbour] = tmpDst
                 }
             }
+        }
+    }
+
+    fun paintSeam() {
+        val seam = mutableListOf<Pair<Int, Int>>()
+
+        seam.add(distance.filterKeys { it.first == image.width - 1 }.toList().minByOrNull { (_, value) -> value }!!.first)
+
+        for (x in image.width - 1 downTo 1) {
+            seam.add(getNeighborsY(seam.last().first - 1, seam.last().second).minByOrNull { distance[it]!! }!!)
+        }
+        for (pixel in seam) {
+            image.setRGB(pixel.first, pixel.second, Color.RED.rgb)
         }
     }
 
