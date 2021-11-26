@@ -1,6 +1,5 @@
 package seamcarving
 
-import seamcarving.seamcarving.SeamCarving
 import java.io.File
 import javax.imageio.ImageIO
 
