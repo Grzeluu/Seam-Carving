@@ -14,5 +14,10 @@ fun main() {
     val heightReduce = readLine()!!.toInt()
 
     val image = ImageIO.read(File(input))
-    val resizedImage = SeamCarving(image).resize(widthReduce, heightReduce)
+    val sc = SeamCarving(image)
+    repeat(widthReduce) {
+        sc.removeSeam()
+    }
+    ImageIO.write(sc.image, "png", File("out.png"))
+    println("Done!")
 }
