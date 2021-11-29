@@ -23,11 +23,11 @@ class SeamCarving(var image: BufferedImage) {
                 distance[Pair(x, y)] = Double.MAX_VALUE
             }
         }
-        calculateDistances()
+
     }
 
-    private fun calculateDistances() {
-        //All pixels in the top row have 0 distance - beginning of the path
+    private fun calculateVerticalDistances() {
+        //All pixels in the top row have starting distance equivalent to their energy - the beginning of the path
         distance.putAll(energy.filterKeys { it.second == 0 })
 
         for (y in 0 until image.height - 1) {
@@ -43,26 +43,74 @@ class SeamCarving(var image: BufferedImage) {
         }
     }
 
-    fun createSeam() {
-        val seam = mutableListOf<Pair<Int, Int>>()
-        seam.add(
-            distance.filterKeys { it.second == image.height - 1 }.toList().minByOrNull { (_, value) -> value }!!.first
-        )
-        for (y in image.height - 1 downTo 1) {
-            seam.add(getNeighborsX(seam.last().first, seam.last().second - 1).minByOrNull { distance[it]!! }!!)
+    private fun calculateHorizontalDistances() {
+        //All pixels in the left row have starting distance equivalent to their energy - the beginning of the path
+        distance.putAll(energy.filterKeys { it.first == 0 })
+        for (x in 0 until image.width - 1) {
+            var queue = mutableMapOf<Pair<Int, Int>, Double>()
+            queue.putAll(distance.filterKeys { it.first == x })
+            queue.toList().sortedBy { (_, value) -> value }.toMap().toMutableMap().also { queue = it }
+            for (pixel in queue) {
+                for (neighbour in getNeighborsY(pixel.key.first + 1, pixel.key.second)) {
+                    val tmpDst = distance[pixel.key]!! + energy[neighbour]!!
+                    if (tmpDst < distance[neighbour]!!) distance[neighbour] = tmpDst
+                }
+            }
         }
-        image = image.removeVerticalSeam(seam)
-        refreshData()
     }
+
+    fun resize(width: Int, height: Int) {
+        repeat(width) {
+            calculateVerticalDistances()
+            val seam = mutableListOf<Pair<Int, Int>>()
+            seam.add(
+                distance.filterKeys { it.second == image.height - 1 }.toList()
+                    .minByOrNull { (_, value) -> value }!!.first
+            )
+            for (y in image.height - 1 downTo 1) {
+                seam.add(getNeighborsX(seam.last().first, seam.last().second - 1).minByOrNull { distance[it]!! }!!)
+            }
+            image = image.removeVerticalSeam(seam)
+            refreshData()
+        }
+        repeat(height) {
+            calculateHorizontalDistances()
+            val seam = mutableListOf<Pair<Int, Int>>()
+            seam.add(
+                distance.filterKeys { it.first == image.width - 1 }.toList()
+                    .minByOrNull { (_, value) -> value }!!.first
+            )
+            for (x in image.width - 1 downTo 1) {
+                seam.add(getNeighborsY(seam.last().first - 1, seam.last().second).minByOrNull { distance[it]!! }!!)
+            }
+            image = image.removeHorizontalSeam(seam)
+            refreshData()
+        }
+    }
+
 
     private fun BufferedImage.removeVerticalSeam(seam: MutableList<Pair<Int, Int>>): BufferedImage {
         val resizedImage = BufferedImage(this.width - 1, this.height, BufferedImage.TYPE_INT_RGB)
-        for(y in 0 until this.height) {
+        for (y in 0 until this.height) {
             var newX = 0
             for (x in 0 until this.width) {
                 if (!seam.contains(Pair(x, y))) {
                     resizedImage.setRGB(newX, y, this.getRGB(x, y))
                     newX++
+                }
+            }
+        }
+        return resizedImage
+    }
+
+    private fun BufferedImage.removeHorizontalSeam(seam: MutableList<Pair<Int, Int>>): BufferedImage {
+        val resizedImage = BufferedImage(this.width, this.height - 1, BufferedImage.TYPE_INT_RGB)
+        for (x in 0 until this.width) {
+            var newY = 0
+            for (y in 0 until this.height) {
+                if (!seam.contains(Pair(x, y))) {
+                    resizedImage.setRGB(x, newY, this.getRGB(x, y))
+                    newY++
                 }
             }
         }
