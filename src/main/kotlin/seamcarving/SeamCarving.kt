@@ -43,7 +43,7 @@ class SeamCarving(var image: BufferedImage) {
         }
     }
 
-    fun removeSeam() {
+    fun createSeam() {
         val seam = mutableListOf<Pair<Int, Int>>()
         seam.add(
             distance.filterKeys { it.second == image.height - 1 }.toList().minByOrNull { (_, value) -> value }!!.first
@@ -57,11 +57,11 @@ class SeamCarving(var image: BufferedImage) {
 
     private fun BufferedImage.removeVerticalSeam(seam: MutableList<Pair<Int, Int>>): BufferedImage {
         val resizedImage = BufferedImage(this.width - 1, this.height, BufferedImage.TYPE_INT_RGB)
-        for(y in 0 until image.height) {
+        for(y in 0 until this.height) {
             var newX = 0
-            for (x in 0 until image.width) {
+            for (x in 0 until this.width) {
                 if (!seam.contains(Pair(x, y))) {
-                    resizedImage.setRGB(newX, y, image.getRGB(x, y))
+                    resizedImage.setRGB(newX, y, this.getRGB(x, y))
                     newX++
                 }
             }
