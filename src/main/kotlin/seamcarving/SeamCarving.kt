@@ -23,17 +23,20 @@ class SeamCarving(var image: BufferedImage) {
                 distance[Pair(x, y)] = Double.MAX_VALUE
             }
         }
-
     }
 
     private fun calculateVerticalDistances() {
-        //All pixels in the top row have starting distance equivalent to their energy - the beginning of the path
+        //All pixels in the top row have starting distance equivalent to their energy
         distance.putAll(energy.filterKeys { it.second == 0 })
 
+        //Calculating shortest path to each pixel in the row using dynamic programming method
         for (y in 0 until image.height - 1) {
             var queue = mutableMapOf<Pair<Int, Int>, Double>()
+            //Take all pixels from the current row
             queue.putAll(distance.filterKeys { it.second == y })
+            //Sorting queue
             queue.toList().sortedBy { (_, value) -> value }.toMap().toMutableMap().also { queue = it }
+            //Calculating shortest path to the each pixel in the lower row
             for (pixel in queue) {
                 for (neighbour in getNeighborsX(pixel.key.first, pixel.key.second + 1)) {
                     val tmpDst = distance[pixel.key]!! + energy[neighbour]!!
@@ -44,7 +47,6 @@ class SeamCarving(var image: BufferedImage) {
     }
 
     private fun calculateHorizontalDistances() {
-        //All pixels in the left row have starting distance equivalent to their energy - the beginning of the path
         distance.putAll(energy.filterKeys { it.first == 0 })
         for (x in 0 until image.width - 1) {
             var queue = mutableMapOf<Pair<Int, Int>, Double>()
@@ -87,7 +89,6 @@ class SeamCarving(var image: BufferedImage) {
             refreshData()
         }
     }
-
 
     private fun BufferedImage.removeVerticalSeam(seam: MutableList<Pair<Int, Int>>): BufferedImage {
         val resizedImage = BufferedImage(this.width - 1, this.height, BufferedImage.TYPE_INT_RGB)
